@@ -11,6 +11,7 @@
     "cors": "^2.8.5",
     "express": "latest",
     "forever": "^4.0.3",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.0.1",
     "nodemon": "latest",
     "post": "^0.0.1",

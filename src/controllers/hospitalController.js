@@ -83,14 +83,19 @@ exports.playerCheckpoint = async (req, res) => {
           throw new Error("sessionId does not exist in Hospital_Players");
         }
 
-        console.log("[playerCheckpoint] - Checking checkpoint existence");
-        let isDone = await queryDatabase(`SELECT * FROM Hospital_Checkpoints WHERE sessionId = '${sessionId}' AND checkpointId = ${checkpointId}`);
-        if (isDone.length === 0) {
-          await queryDatabase(`INSERT INTO Hospital_Checkpoints (sessionId, checkpointId, date) VALUES ('${sessionId}', ${checkpointId}, NOW());`);
-          result.push('true');
-        } else {
-          result.push('exists');
-        }
+        console.log("[playerCheckpoint] - Inserting new checkpoint");
+        await queryDatabase(`INSERT INTO Hospital_Checkpoints (sessionId, checkpointId, date) VALUES ('${sessionId}', '${checkpointId}', NOW())`);
+        result.push('true');
+
+        console.log("[playerCheckpoint] - Updating player_last_checkpoints");
+        await queryDatabase(`
+          INSERT INTO Player_Last_Checkpoints (sessionId, checkpointId, date)
+          VALUES ('${sessionId}', '${checkpointId}', NOW())
+          ON DUPLICATE KEY UPDATE
+          checkpointId = VALUES(checkpointId),
+          date = VALUES(date);
+        `);
+
       } catch (error) {
         console.error("[playerCheckpoint] - Database query error:", error);
         res.status(500).send("Database query error: " + error.message);
@@ -112,8 +117,8 @@ exports.sessionList = async (req, res) => {
     try {
       console.log("[sessionList] - Checking session existence");
       let sessionLists = await queryDatabase(`
-        SELECT hp.sessionId, hp.sessionStartDate, max(hc.checkpointId) as actualCheckpoint FROM vrapi_pro.hospital_players as hp
-        INNER JOIN vrapi_pro.hospital_checkpoints as hc on hp.sessionId = hc.sessionId
+        SELECT hp.sessionId, hp.sessionStartDate, max(hc.checkpointId) as actualCheckpoint FROM Hospital_Players as hp
+        INNER JOIN Hospital_Checkpoints as hc on hp.sessionId = hc.sessionId
         WHERE sessionEndDate IS NULL
         GROUP BY hp.sessionId;
       `);
@@ -130,6 +135,40 @@ exports.sessionList = async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     console.error("[sessionList] - Error reading data:", error);
+    res.status(500).send("Error reading POST data");
+  }
+};
+
+exports.playerData = async (req, res) => {
+  console.log("[playerData] - Start");
+  let result = [];
+  try {
+    console.log("[playerData] - Reading POST data");
+    let receivedPOST = req.body;
+    console.log("[playerData] - POST data received:", receivedPOST);
+
+    if (receivedPOST) {
+      let sessionId = receivedPOST.sessionId;
+      if (sessionId === 'undefined' || sessionId === 'Undefined') {
+        res.status(500).send("Invalid session Id, Undefined has been passed as sessionId");
+      }
+      try {
+        let dbResult = await queryDatabase(`
+          SELECT hp.sessionStartDate, checkpointId, date FROM Hospital_Players as hp
+          INNER JOIN Hospital_Checkpoints as hc on hc.sessionId = hp.sessionId
+          WHERE hp.sessionId = '${sessionId}';
+        `);
+        result.push(...dbResult)
+      } catch (error) {
+        console.error("[playerData] - Database query error:", error);
+        res.status(500).send("Database query error");
+        return;
+      }
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("[playerData] - Error reading POST data:", error);
     res.status(500).send("Error reading POST data");
   }
 };

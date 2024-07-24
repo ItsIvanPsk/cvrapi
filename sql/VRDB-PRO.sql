@@ -15,6 +15,14 @@ CREATE TABLE Users (
 	PRIMARY KEY (UserId)
 );
 
+CREATE TABLE SesionUsers(
+    UserId INTEGER NOT NULL,
+    Token VARCHAR(999),
+    ExpirationDate datetime,
+    FOREIGN KEY (UserId) REFERENCES Users (UserId),
+    PRIMARY KEY (UserId)
+);
+
 CREATE TABLE Experience (
 	ExperienceId INTEGER NOT NULL auto_increment,
 	Name VARCHAR(255),
@@ -186,10 +194,15 @@ CREATE TABLE Hospital_Players (
 CREATE TABLE Hospital_Checkpoints (
     sessionId VARCHAR(100) NOT NULL,
     checkpointId INTEGER NOT NULL,
-    date datetime NOT NULL,
-    FOREIGN KEY (sessionId) REFERENCES Hospital_Players (sessionId),
-    PRIMARY KEY(sessionId, checkpointId)
+    date datetime NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS Player_Last_Checkpoints (
+  sessionId VARCHAR(255) PRIMARY KEY,
+  checkpointId INT,
+  date DATETIME
+);
+
 
 INSERT INTO Users (UserId, Name, Surname, Username, Pwd, Telf, UserMail, JoinDate) VALUES
 	(1, 'Pau', 'Maestre', 'pmaestre', '123123', 625046606, 'maestrep15@gmail.com', '2022-11-18 22:00:00'),
