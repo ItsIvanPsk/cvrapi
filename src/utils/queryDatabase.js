@@ -4,7 +4,7 @@ const mysql = require('mysql2/promise');
 const pool = mysql.createPool({
   host: process.env.MYSQLHOST || "localhost",
   port: process.env.MYSQLPORT || 3306,
-  user: process.env.MYSQLUSER || "root",
+  user: process.env.MYSQLUSER || "vrapi",
   password: process.env.MYSQLPASSWORD || "P@ssw0rd",
   database: process.env.MYSQLDATABASE || "vrapi_pro",
   waitForConnections: true,

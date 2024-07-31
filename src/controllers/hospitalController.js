@@ -112,8 +112,8 @@ exports.sessionList = async (req, res) => {
     try {
       console.log("[sessionList] - Checking session existence");
       let sessionLists = await queryDatabase(`
-        SELECT hp.sessionId, hp.sessionStartDate, max(hc.checkpointId) as actualCheckpoint FROM vrapi_pro.hospital_players as hp
-        INNER JOIN vrapi_pro.hospital_checkpoints as hc on hp.sessionId = hc.sessionId
+        SELECT hp.sessionId, hp.sessionStartDate, max(hc.checkpointId) as actualCheckpoint FROM vrapi_pro.Hospital_Players as hp
+        INNER JOIN vrapi_pro.Hospital_Checkpoints as hc on hp.sessionId = hc.sessionId
         WHERE sessionEndDate IS NULL
         GROUP BY hp.sessionId;
       `);
